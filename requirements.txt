@@ -1,4 +1,5 @@
 cython
 gensim
+google_play_scraper
 nltk
 requests
