@@ -4,8 +4,8 @@ from configparser import ConfigParser
 
 
 class Config(object):
-    HOME_DIR = path.abspath(path.join(path.dirname(__file__), r'../'))
-    __CONFIG_FILE = path.join(HOME_DIR, 'config.ini')
+    HOME_DIR = path.abspath(path.join(path.dirname(__file__), r"../"))
+    __CONFIG_FILE = path.join(HOME_DIR, "config.ini")
     Parser = ConfigParser()
     Parser.read(__CONFIG_FILE)
 
@@ -40,7 +40,7 @@ class Config(object):
             elif attr_type is bool:
                 result = cls.Parser.getfloat(section=section, option=option)
             elif attr_type is str:
-                result = cls.Parser.getfloat(section=section, option=option)
+                result = cls.Parser.get(section=section, option=option)
         except configparser.NoOptionError:
             pass
         return result
@@ -60,6 +60,10 @@ class Config(object):
     @classmethod
     def get_info_num(cls):
         return cls.__get_attr(int, cls.__SEC_INFO, "InfoNum")
+
+    @classmethod
+    def get_language(cls):
+        return cls.__get_attr(str, cls.__SEC_INFO, "Language")
 
     @classmethod
     def get_store_num(cls):
