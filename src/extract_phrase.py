@@ -1,13 +1,18 @@
-import logging
-from gensim.models.phrases import Phrases
-import os
 import itertools
+import logging
+import os
+
+from gensim.models.phrases import Phrases
+
 from extractSentenceWords import *
 
-logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s: %(levelname)s: %(message)s", level=logging.INFO
+)
 
 
-def build_input(app_files):
+def build_input(app_files, language="en"):
     doc_sent_word = []
     num_words = 0
     num_docs = 0
@@ -17,7 +22,9 @@ def build_input(app_files):
             for line in fin.readlines():
                 line = line.strip()
                 line = line.split("******")
-                words_sents, wc = extractSentenceWords(line[1], lemma=True)
+                words_sents, wc = extractSentenceWords(
+                    line[1], lemma=True, language=language
+                )
                 doc_sent_word.append(words_sents)
                 num_docs += 1
                 num_words += wc
@@ -27,12 +34,13 @@ def build_input(app_files):
     logging.info("Read %d docs, %d words!" % (num_docs, num_words))
     return doc_sent_word
 
+
 ### write bigrams and trigrams to .model files
-def extract_phrases(app_files, bigram_min, trigram_min):
+def extract_phrases(app_files, bigram_min, trigram_min, language="en"):
     bigram_fp = os.path.join("..", "model", "bigram.model")
     trigram_fp = os.path.join("..", "model", "trigram.model")
 
-    rst = build_input(app_files)
+    rst = build_input(app_files, language)
     gen = list(itertools.chain.from_iterable(rst))  # flatten
     bigram = Phrases(gen, threshold=5, min_count=bigram_min)
     trigram = Phrases(bigram[gen], threshold=3, min_count=trigram_min)

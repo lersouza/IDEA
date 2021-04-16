@@ -25,15 +25,14 @@ unicode_punc_tbl = dict.fromkeys(
 )
 
 
-# def lemmatize(word):
-#     if word in skip_words:
-#         return word
-#     n_word = WordNetLemmatizer().lemmatize(word, 'v')
-#     if n_word not in special_words:
-#         temp_token = WordNetLemmatizer().lemmatize(n_word, 'n')
-#         if (n_word != temp_token and not re.search(r'ss$', n_word)):
-#             n_word = temp_token
-#     return n_word
+wnl = WordNetLemmatizer()
+
+
+def lemmatize(word, language):
+    if language == "en":
+        return wnl.lemmatize(word, "v")
+
+    return word
 
 
 def extractSentenceWords(
@@ -44,6 +43,7 @@ def extractSentenceWords(
     lemma=False,
     sent=True,
     replace_digit=False,
+    language="en",
 ):
     if remove_punc:
         # remove unicode punctuation marks, keep ascii punctuation marks
@@ -58,7 +58,6 @@ def extractSentenceWords(
     )  # comment comma
     wc = 0
     wordsInSentences = []
-    wnl = WordNetLemmatizer()
     for sentence in sentences:
         if sentence == "":
             continue
@@ -70,10 +69,12 @@ def extractSentenceWords(
         words = re.split(r"[\s+,\-*\/&%=_<>\[\]~\|\@\$\\]", sentence)
         words = filter(lambda w: w, words)
         words = map(lambda w: w.lower(), words)
+
         if replace_digit:
             map(lambda w: re.sub(r"\d+", "<digit>", w), words)
+
         if lemma:
-            words = map(lambda w: wnl.lemmatize(w, "v"), words)
+            words = map(lambda w: lemmatize(w, language), words)
 
         words = list(words)
 
@@ -82,4 +83,5 @@ def extractSentenceWords(
             wc += len(words)
     if not sent:
         return list(itertools.chain.from_iterable(wordsInSentences)), wc
+
     return wordsInSentences, wc

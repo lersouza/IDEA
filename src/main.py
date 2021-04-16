@@ -18,7 +18,6 @@ import nltk
 import numpy as np
 from gensim import corpora
 from gensim.models import LdaMulticore, TfidfModel, Word2Vec
-from nltk.corpus import stopwords
 from scipy import sparse
 from scipy.stats import entropy
 
@@ -26,113 +25,12 @@ from config import Config
 from extract_phrase import extract_phrases
 from extractSentenceWords import *
 from onlineLDA import *
+from stop_words import get_stop_words
 
 
 bigram = None
 trigram = None
 wv_model = None
-my_stoplst = [
-    "app",
-    "good",
-    "excellent",
-    "awesome",
-    "please",
-    "they",
-    "very",
-    "too",
-    "like",
-    "love",
-    "nice",
-    "yeah",
-    "amazing",
-    "lovely",
-    "perfect",
-    "much",
-    "bad",
-    "best",
-    "yup",
-    "suck",
-    "super",
-    "thank",
-    "great",
-    "really",
-    "omg",
-    "gud",
-    "yes",
-    "cool",
-    "fine",
-    "hello",
-    "alright",
-    "poor",
-    "plz",
-    "pls",
-    "google",
-    "facebook",
-    "three",
-    "ones",
-    "one",
-    "two",
-    "five",
-    "four",
-    "old",
-    "new",
-    "asap",
-    "version",
-    "times",
-    "update",
-    "star",
-    "first",
-    "rid",
-    "bit",
-    "annoying",
-    "beautiful",
-    "dear",
-    "master",
-    "evernote",
-    "per",
-    "line",
-    "oh",
-    "ah",
-    "cannot",
-    "doesnt",
-    "won't",
-    "dont",
-    "unless",
-    "you're",
-    "aren't",
-    "i'd",
-    "can't",
-    "wouldn't",
-    "around",
-    "i've",
-    "i'll",
-    "gonna",
-    "ago",
-    "you'll",
-    "you'd",
-    "28th",
-    "gen",
-    "it'll",
-    "vice",
-    "would've",
-    "wasn't",
-    "year",
-    "boy",
-    "they'd",
-    "isnt",
-    "1st",
-    "i'm",
-    "nobody",
-    "youtube",
-    "isn't",
-    "don't",
-    "2016",
-    "2017",
-    "since",
-    "near",
-    "god",
-]
-
 
 # dataset
 app_files = Config.get_datasets()
@@ -144,6 +42,7 @@ win_size = Config.get_window_size()
 bigram_min = Config.get_bigram_min()
 trigram_min = Config.get_trigram_min()
 info_num = Config.get_info_num()
+language = Config.get_language()
 store_num = Config.get_store_num()
 val_index = Config.get_validate_or_not()
 
@@ -173,7 +72,7 @@ def extract_review():
                 date = terms[2]
                 version = terms[3]
             review_o = terms[1]
-            review_p, wc = extractSentenceWords(review_o)
+            review_p, wc = extractSentenceWords(review_o, language=language)
             review = list(build_phrase(review_p))
             review = [list(replace_digit(s)) for s in review]
             rate = (
@@ -218,7 +117,7 @@ def update_phrase():
                 logging.error("review format error at %s in %s" % (apk, line))
                 continue
             review_o = terms[1]
-            review_p, wc = extractSentenceWords(review_o)
+            review_p, wc = extractSentenceWords(review_o, language=language)
             bigram.add_vocab(review_p)
             trigram.add_vocab(bigram[review_p])
         # update
@@ -252,7 +151,7 @@ def build_AOLDA_input_version(timed_reviews=None):
     if timed_reviews is None:
         with open("../result/timed_reviews") as fin:
             timed_reviews = json.load(fin)
-    stoplist = stopwords.words("english") + my_stoplst
+    stoplist = get_stop_words(language)
 
     OLDA_input = {}
     for apk, reviews in timed_reviews.items():
@@ -349,7 +248,7 @@ def generate_labeling_candidates(OLDA_input):
                         break
                 for word in words:
                     if (
-                        word in stopwords.words("english") + my_stoplst
+                        word in get_stop_words(language)
                     ):  # remove stop word
                         match = False
                         break
@@ -1140,11 +1039,11 @@ def meminfo(str):
 
 def save_phrase(review_path, bigram_num, trigram):
     for apk, app in app_files:
-        extract_phrases(app)
+        extract_phrases(app, language=language)
 
 
 if __name__ == "__main__":
-    extract_phrases(app_files, bigram_min, trigram_min)
+    extract_phrases(app_files, bigram_min, trigram_min, language=language)
     load_phrase()
 
     timed_reviews = extract_review()
