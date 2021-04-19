@@ -16,6 +16,7 @@ logger = logging.getLogger("downloader")
 
 def handle_review_field(field):
     field = str(field)
+    field = field.replace("*", "")
     field = field.replace("\r", "")
     field = field.replace("\n", "")
 
